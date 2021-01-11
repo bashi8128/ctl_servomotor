@@ -1,53 +1,34 @@
 //! Author: Masahiro Itabashi <itabasi.lm@gmail.com>
-//! Last modified: Tue, 08 Dec 2020 05:53:43 +0900
-use std::env::args;
+//! Last modified: Mon, 11 Jan 2021 22:15:00 +0900
+pub mod parse_args;
+use parse_args::Args;
 
+use std::time::Duration;
 use rppal::pwm::{Channel, Polarity, Pwm};
 
-fn print_usage(){
-    println!("Usage: ./ctl_servomotor frequency duty_ratio");
-}
-
-//TODO
-//Change to return tuple with Polarity
-fn parse_args() -> (f64, f64) {
-    let args: Vec<String> = args().collect();
-    let mut freq: f64 = 40.0;
-    let mut duty: f64 = 0.2;
-
-    match args.len(){
-        1 => {},
-        2 => {
-            freq = args[1].parse().unwrap();
-        },
-        3 => {
-            freq = args[1].parse().unwrap();
-            duty = args[2].parse().unwrap();
-        },
-        _ => {
-            print_usage();
-        }
-    };
-    (freq, duty)
-}
-
 fn main(){
-    let args = parse_args();
-    let res = Pwm::with_frequency(
-        Channel::Pwm0,
-        args.0,
-        args.1,
-        Polarity::Normal,
-        true
-        );
+    let args: Args = Args::parse_args();
 
-    match res{
-        Ok(Pwm) => {
-            println!("PWM executed");
-        },
-        Err(_) => {
-            println!("Error: Can't open device");
-        }
-    };
+    if args.type_f() {
+        Pwm::with_frequency(
+            Channel::Pwm0,
+            args.flag_f.unwrap(),
+            args.flag_c.unwrap(),
+            Polarity::Normal,
+            true
+        );
+    }
+    else if args.type_p() {
+        Pwm::with_period(
+            Channel::Pwm0,
+            Duration::from_secs_f64(args.flag_p.unwrap()),
+            Duration::from_secs_f64(args.flag_w.unwrap()),
+            Polarity::Normal,
+            true
+        );
+    }
+    else {
+        println!("hoge");
+    }
 }
 
